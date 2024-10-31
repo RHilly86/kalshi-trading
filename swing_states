@@ -1,0 +1,19 @@
+using Combinatorics
+
+swing_states = ["GA", "NC", "MI", "WI", "PA", "AZ", "NV"]
+swing_state_combos = Dict(i => collect(combinations(swing_states, i)) for i in 1:7)
+sum(length.(values(swing_state_combos)))
+
+swing_state_combos
+
+for combo in keys(swing_state_combos)
+    println("$combo:", length(swing_state_combos[combo]))
+end
+
+
+win_5 = fill("", 21, 5)
+swing_state_combos[3]
+
+for (idx, row) in enumerate(swing_state_combos[5])
+    win_5[idx, :] = row
+end
