@@ -34,34 +34,3 @@ def sign_pss_text(private_key: rsa.RSAPrivateKey, text: str) -> str:
         return base64.b64encode(signature).decode("utf-8")
     except InvalidSignature as e:
         raise ValueError("RSA sign PSS failed") from e
-
-# Get the current time
-current_time = datetime.datetime.now()
-
-# Convert the time to a timestamp (seconds since the epoch)
-timestamp = current_time.timestamp()
-
-# Convert the timestamp to milliseconds
-current_time_milliseconds = int(timestamp * 1000)
-timestampt_str = str(current_time_milliseconds)
-
-private_key = load_private_key_from_file("/Users/rhilly/market-trading.txt")
-method = "GET"
-base_url = "https://api.elections.kalshi.com/"
-path = "/trade-api/v2/portfolio/balance"
-
-msg_string = timestampt_str + method + path
-
-sig = sign_pss_text(private_key, msg_string)
-
-len(sig)
-
-headers = {
-        'KALSHI-ACCESS-KEY': "d8a1aef2-e376-4ba0-8a54-ada12eb1729b",
-        'KALSHI-ACCESS-SIGNATURE': sig,
-        'KALSHI-ACCESS-TIMESTAMP': timestampt_str
-}
-
-response = requests.get(base_url + path, headers=headers)
-print("Status Code:", response.status_code)
-print("Response Body:", response.text)

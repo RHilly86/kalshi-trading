@@ -19,8 +19,6 @@ get_portfolio_balance <- function() {
   return(balance)
 }
 
-get_portfolio_balance()
-
 get_events <- function(limit = 100, with_nested_markets = TRUE) {
   base_url <- "https://api.elections.kalshi.com"
   
@@ -57,41 +55,40 @@ get_event <- function(event_ticker, with_nested_markets = TRUE) {
 
 resp <- get_event("KXCABCOUNT-25MAR01", with_nested_markets = TRUE)
 
-get_candlesticks <- function(market_ticker, series_ticker) {
-  base_url <- "https://api.elections.kalshi.com"
-  
-  path <- str_glue("/trade-api/v2/series/{series_ticker}/markets/{market_ticker}/candlesticks")
-  headers <- create_headers("GET", path)
-  req <- http_build(base_url, path, headers)
-  resp <- http_run(req)
-  
-  return(resp)
+next_req <- function(resp, req) {
+    cursor <- resp_body_json(resp)$cursor
+    if (cursor == "")
+      return(NULL)
+    req |> req_url_query(cursor = cursor)
 }
 
-get_trades <- function(limit = 100, market_ticker) {
+get_trades <- function(limit = 100,
+                       market_ticker) {
   base_url <- "https://api.elections.kalshi.com"
   
   path <- str_glue("/trade-api/v2/markets/trades")
   headers <- create_headers("GET", path)
   query_params <- list(
-    limit = 100,
+    limit = limit,
     ticker = market_ticker
   )
-  req <- http_build(base_url, path, headers, query_params)
-  resp <- http_run(req)
   
-  return(resp)
-}
+  req <- http_build(base_url, path, headers, query_params)
+  resp <- req_perform_iterative(
+    req,
+    next_req,
+    max_reqs = Inf
+  )
+  trades <- resps_data(resp, function(resp) {
+    data <- resp_body_json(resp)$trades
+    map(data, as_tibble)
+  }) |> 
+    bind_rows()
+  return(trades)
+} 
 
-resp$cursor
+resp <- get_trades(1000, "KXCABCOUNT-25MAR01-15")
 
-resp <- get_trades(100, "KXCABCOUNT-25MAR01-15")
-
-trades <- bind_rows(map(resp$trades, as_tibble))
-trades
-
-
-
-
-
-
+resp |> 
+  mutate(created_time = lubridate::as_datetime(created_time)) |> 
+  
