@@ -90,5 +90,6 @@ get_trades <- function(limit = 100,
 resp <- get_trades(1000, "KXCABCOUNT-25MAR01-15")
 
 resp |> 
-  mutate(created_time = lubridate::as_datetime(created_time)) |> 
+  mutate(created_time = lubridate::as_datetime(created_time)) |>
+  
   
