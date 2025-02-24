@@ -26,16 +26,7 @@ function get_events(limit = 100, with_nested_markets = true, all_events = true)
     events = JSON3.read(decode(resp.body, "UTF-8"))
 
     if all_events
-        data = []
-        cursor = events[:cursor]
-        while cursor != ""
-            query_params["cursor"] = cursor
-            resp = HTTP.get(base_url * path; headers = headers, query = query_params)
-            events = JSON3.read(decode(resp.body, "UTF-8"))
-            push!(data, events[:events])
-            cursor = events[:cursor]
-            println(data)
-        end
+        data = paginate(base_url, path, headers, query_params, events, :events)
     end
     return data
 end
@@ -66,31 +57,3 @@ function get_trades(market_ticker, limit = 1000, all_trades = true)
     end
     return data
 end
-
-function paginate(base_url, path, headers, query_params, first_resp, field_name)
-    data = []
-    push!(data, first_resp[field_name])
-    cursor = first_resp[:cursor]
-    while cursor != ""
-        query_params["cursor"] = cursor
-        resp = HTTP.get(base_url * path; headers = headers, query = query_params)
-        json_body = JSON3.read(decode(resp.body, "UTF-8"))
-        push!(data, json_body[field_name])
-        cursor = json_body[:cursor]
-    end
-    return data
-end
-
-x = get_trades("KXCABCOUNT-25MAR01-15")
-
-
-        data = []
-        push!(data, trades[:trades])
-        cursor = trades[:cursor]
-        while cursor != ""
-            query_params["cursor"] = cursor
-            resp = HTTP.get(base_url * path; headers = headers, query = query_params)
-            trades = JSON3.read(decode(resp.body, "UTF-8"))
-            push!(data, trades[:trades])
-            cursor = trades[:cursor]
-            println(data)
